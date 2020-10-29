@@ -5,7 +5,7 @@ from datetime import datetime
 import os
 import sys
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
-from data_analysis import read_csv
+import data_analysis as da
 
 
 dag = DAG('python_dag',
@@ -16,10 +16,36 @@ dag = DAG('python_dag',
 
 read_csv_task = PythonOperator(
     task_id='read_csv_task',
-    python_callable=read_csv,
+    python_callable=da.read_csv,
     # op_args = ['one', 'two', 'three'],
     dag=dag
 )
+
+clean_data_task = PythonOperator(
+    task_id='clean_data_task',
+    python_callable=da.clean_data,
+    provide_context=True,
+    dag=dag
+)
+
+count_by_type_task = PythonOperator(
+    task_id='count_by_type_task',
+    python_callable=da.count_by_type,
+    provide_context=True,
+    dag=dag
+)
+
+installs_by_category_task = PythonOperator(
+    task_id='installs_by_category_task',
+    python_callable=da.installs_by_category,
+    provide_context=True,
+    dag=dag
+)
+
+read_csv_task >> clean_data_task >> [
+    count_by_type_task,
+    installs_by_category_task
+]
 
 # task_instance = kwargs['task_instance']
 # task_instance.xcom_pull(task_ids='Task1')
@@ -31,5 +57,5 @@ read_csv_task = PythonOperator(
 # 1. OK separar o tratamento em outro arquivo
 # 2. OK PATH relativo do arquivo csv
 # 3. mais análises
-# 4. tentar extrair trechos em tasks separadas
+# 4. OK tentar extrair trechos em tasks separadas
 # 5. exportar csv com os dados tratados
