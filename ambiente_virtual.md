@@ -25,7 +25,7 @@ $ nome_do_ambiente_virtual\Scripts\activate
 - Linux
 
 ```
-$ source nome_do_ambiente_virtual/Scripts/activate
+$ source nome_do_ambiente_virtual/bin/activate
 ```
 
 > Desativar o ambiente virtual.
