@@ -6,6 +6,7 @@ import re
 AIRFLOW_HOME = os.getenv('AIRFLOW_HOME')
 FILES_PATH = f'{AIRFLOW_HOME}/dags/files'
 IMPORT_CSV_PATH = f'{FILES_PATH}/read/googleplaystore.csv'
+EXPORT_PATH = f'{FILES_PATH}/write'
 
 
 def column_to_numeric(column):
@@ -33,7 +34,17 @@ def clean_data(**context):
     return df
 
 
-def count_by_type(**context):
+def export_cleared_csv(**context):
+    df = context['task_instance'].xcom_pull(task_ids='clean_data_task')
+    df.to_csv(f"{EXPORT_PATH}/cleared_data.csv", index=False)
+    text = f"Arquivo salvo em {EXPORT_PATH}/cleared_data.csv"
+    print("-"*len(text))
+    print(text)
+    print("-"*len(text))
+    return df
+
+
+def count_per_type(**context):
     df = context['task_instance'].xcom_pull(task_ids='clean_data_task')
     result = df.groupby("Type").App \
         .count() \
@@ -48,12 +59,16 @@ def count_by_type(**context):
     plt.legend(labels=result.Type)
     fig.set_facecolor("#fff")
     fig.tight_layout()
-    fig.savefig(fname=f"{FILES_PATH}/write/percent_paid_free.png", dpi=300)
+    fig.savefig(fname=f"{EXPORT_PATH}/percent_paid_free.png", dpi=300)
 
+    text = f"Gráfico salvo em {EXPORT_PATH}/percent_paid_free.png"
+    print("-"*len(text))
+    print(text)
+    print("-"*len(text))
     return result
 
 
-def installs_by_category(**context):
+def installs_per_category(**context):
     df = context['task_instance'].xcom_pull(task_ids='clean_data_task')
     result = df.groupby("Category").Installs \
         .sum() \
@@ -73,7 +88,107 @@ def installs_by_category(**context):
     for index, value in enumerate(result.Installs):
         plt.text(value + .05e10, index, str(value))
 
-    fig.savefig(fname=f"{FILES_PATH}/write/installs_per_category.png", dpi=300)
+    fig.savefig(fname=f"{EXPORT_PATH}/installs_per_category.png", dpi=300)
+
+    text = f"Gráfico salvo em {EXPORT_PATH}/installs_per_category.png"
+    print("-"*len(text))
+    print(text)
+    print("-"*len(text))
+    return result
+
+
+def apps_per_android_version(**context):
+    df = context['task_instance'].xcom_pull(task_ids='clean_data_task')
+    result = df.groupby("Android Ver").App \
+        .count() \
+        .to_frame() \
+        .reset_index() \
+        .sort_values(by="App", ascending=True)
+
+    fig, ax = plt.subplots(figsize=[16, 14])
+    ax.barh(y=result["Android Ver"], width=result.App)
+
+    plt.title(format_string("aplicativos por versão do android"))
+    plt.xlim(0, 2600)
+    plt.locator_params(axis="x", nbins=20)
+    fig.set_facecolor("#fff")
+    fig.tight_layout()
+    plt.xlabel("\nQuantidade")
+    plt.ylabel("Versão do Android")
+
+    for index, value in enumerate(result.App):
+        plt.text(value + 20, index, str(value))
+
+    fig.savefig(fname=f"{EXPORT_PATH}/apps_per_android_version.png", dpi=300)
+
+    text = f"Gráfico salvo em {EXPORT_PATH}/apps_per_android_version.png"
+    print("-"*len(text))
+    print(text)
+    print("-"*len(text))
+    return result
+
+
+def review_5_count_per_category(**context):
+    df = context['task_instance'].xcom_pull(task_ids='clean_data_task')
+    result = df.loc[df.Rating == 5] \
+        .groupby("Category").App \
+        .count() \
+        .to_frame() \
+        .reset_index() \
+        .sort_values(by="App", ascending=True)
+
+    result.rename(columns={"App": "Quantity"}, inplace=True)
+
+    fig, ax = plt.subplots(figsize=(16, 10))
+    rects = ax.bar(x=result.Category, height=result.Quantity)
+
+    plt.title(format_string("quantidade de avaliações 5 por categoria"))
+    fig.autofmt_xdate(rotation=45)
+    fig.set_facecolor("#fff")
+    fig.tight_layout()
+
+    for rect in rects:
+        height = rect.get_height()
+        ax.text(rect.get_x() + rect.get_width() / 2, height + 1, height, ha="center")
+
+    fig.savefig(fname=f"{EXPORT_PATH}/rating_equal_five.png", dpi=300)
+
+    text = f"Gráfico salvo em {EXPORT_PATH}/rating_equal_five.png"
+    print("-"*len(text))
+    print(text)
+    print("-"*len(text))
+    return result
+
+
+def review_1_count_per_category(**context):
+    df = context['task_instance'].xcom_pull(task_ids='clean_data_task')
+    result = df.loc[df.Rating == 1] \
+        .groupby("Category")["App"] \
+        .count() \
+        .to_frame() \
+        .reset_index() \
+        .sort_values(by="App", ascending=True)
+
+    result.rename(columns={"App": "Quantity"}, inplace=True)
+
+    fig, ax = plt.subplots(figsize=(16, 10))
+    rects = ax.bar(x=result["Category"], height=result["Quantity"])
+
+    plt.title(format_string("quantidade de avaliações 1 por categoria"))
+    fig.autofmt_xdate(rotation=45)
+    fig.set_facecolor("#fff")
+    fig.tight_layout()
+
+    for rect in rects:
+        height = rect.get_height()
+        ax.text(rect.get_x() + rect.get_width() / 2, height + 0.05, height, ha="center")
+
+    fig.savefig(fname=f"{EXPORT_PATH}/rating_equal_one.png", dpi=300)
+
+    text = f"Gráfico salvo em {EXPORT_PATH}/rating_equal_one.png"
+    print("-"*len(text))
+    print(text)
+    print("-"*len(text))
     return result
 
 
