@@ -34,16 +34,6 @@ def clean_data(**context):
     return df
 
 
-def export_cleared_csv(**context):
-    df = context['task_instance'].xcom_pull(task_ids='clean_data_task')
-    df.to_csv(f"{EXPORT_PATH}/cleared_data.csv", index=False)
-    text = f"Arquivo salvo em {EXPORT_PATH}/cleared_data.csv"
-    print("-"*len(text))
-    print(text)
-    print("-"*len(text))
-    return df
-
-
 def count_per_type(**context):
     df = context['task_instance'].xcom_pull(task_ids='clean_data_task')
     result = df.groupby("Type").App \
@@ -192,32 +182,11 @@ def review_1_count_per_category(**context):
     return result
 
 
-def outro():
-    # 1 - importar o csv
-    # # 2 - criar coluna identificado tipo numerico ou string
-    # df['check_int'] = df['Reviews'].apply(lambda review: 'int' if review.isnumeric() else 'str')
-    # # 3 - realizar filtro somente numerico
-    # df = df[df['check_int'] != 'str']
-    # df['Reviews'] = df['Reviews'].astype(int)
-    # # 5 - excluir coluna utilizada para filtro
-    # df = df.drop(columns='check_int')
-    # df['Installs_Num'] = df['Installs'].apply(lambda x: int(x.replace('+', '').replace(',', ''))).astype(int)
-
-    # df = clean_data(PATH_FILE)
-    # dfgroup = df.groupby(['Category', 'Genres'])['App'].count().reset_index()
-    # dfgroup[dfgroup['Category'] == 'FAMILY'].sort_values('App', ascending=False)
-    # df[df['Category'] == 'ART_AND_DESIGN'].groupby('Genres')['App'].count()
-    # df['Genres'].apply(lambda genre: genre.split(';'))
-    # df['check_review_numeric'] = df['Reviews'].apply(lambda review: 'int' if review.isnumeric() else 'str')
-    # df.groupby('check_review_numeric')['App'].count()
-    #
-    # df = clean_data(PATH_FILE)
-    # print(df.sort_values('Rating', ascending=False)[['App', 'Rating']].head(30))
-    # print(df[df['Rating'] == 5.0].groupby('Category')['App'].count().reset_index().sort_values('App', ascending=False))
-    return 'oi'
-
-# 1. OK separar o tratamento em outro arquivo
-# 2. OK PATH relativo do arquivo csv
-# 3. mais análises
-# 4. OK tentar extrair trechos em tasks separadas
-# 5. exportar csv com os dados tratados
+def export_cleared_csv(**context):
+    df = context['task_instance'].xcom_pull(task_ids='clean_data_task')
+    df.to_csv(f"{EXPORT_PATH}/cleared_data.csv", index=False)
+    text = f"Arquivo salvo em {EXPORT_PATH}/cleared_data.csv"
+    print("-"*len(text))
+    print(text)
+    print("-"*len(text))
+    return df

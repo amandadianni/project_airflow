@@ -11,13 +11,12 @@ import data_analysis as da
 dag = DAG('data_analysis_dag',
           description='Data Analysis DAG',
           schedule_interval='*/5 * * * *',
-          start_date=datetime(2018, 11, 1),
+          start_date=datetime(2020, 11, 1),
           catchup=False)
 
 read_csv_task = PythonOperator(
     task_id='read_csv_task',
     python_callable=da.read_csv,
-    # op_args = ['one', 'two', 'three'],
     dag=dag
 )
 
@@ -71,23 +70,9 @@ review_1_count_per_category_task = PythonOperator(
 )
 
 read_csv_task >> clean_data_task >> [
-    export_cleared_csv_task,
     count_per_type_task,
     installs_per_category_task,
     apps_per_android_version_task,
     review_5_count_per_category_task,
     review_1_count_per_category_task
-]
-
-# task_instance = kwargs['task_instance']
-# task_instance.xcom_pull(task_ids='Task1')
-# def Task1(**kwargs):
-#     file_name = kwargs['dag_run'].conf.get[file]
-#     task_instance = kwargs['task_instance']
-#     task_instance.xcom_push(key='file', value=file_name)
-#     return file_name
-# 1. OK separar o tratamento em outro arquivo
-# 2. OK PATH relativo do arquivo csv
-# 3. mais análises
-# 4. OK tentar extrair trechos em tasks separadas
-# 5. OK exportar csv com os dados tratados
+] >> export_cleared_csv_task
